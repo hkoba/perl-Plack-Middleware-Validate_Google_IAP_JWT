@@ -17,6 +17,20 @@ use File::Basename;
 use URI;
 use HTTP::Tiny;
 
+use Crypt::JWT ();
+
+use MOP4Import::PSGIEnv qw(
+  HTTP_X_GOOG_IAP_JWT_ASSERTION
+);
+
+sub decode_jwt_env {
+  (my MY $self, my Env $env) = @_;
+  Crypt::JWT::decode_jwt(
+    token => $env->{HTTP_X_GOOG_IAP_JWT_ASSERTION},
+    kid_keys => $self->iap_public_key
+  )
+}
+
 sub iap_public_key {
   (my MY $self) = @_;
   $self->{_iap_public_key} //= do {
