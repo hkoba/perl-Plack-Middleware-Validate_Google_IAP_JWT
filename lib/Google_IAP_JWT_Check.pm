@@ -9,10 +9,13 @@ use MOP4Import::Base::CLI_JSON -as_base
      , [want_iss => default => "https://cloud.google.com/iap"],
      , [want_hd => doc => "expected hosting domain"],
      , qw(
+       app
        _iap_public_key
      )
    ]
   ;
+
+use parent qw(Plack::Middleware);
 
 use File::Basename;
 
@@ -23,7 +26,16 @@ use Crypt::JWT ();
 
 use MOP4Import::PSGIEnv qw(
   HTTP_X_GOOG_IAP_JWT_ASSERTION
+  psgix.goog_iap_jwt
 );
+
+sub call {
+  (my MY $self, my Env $env) = @_;
+
+  my $jwt = $self->decode_jwt_env($env);
+  $env->{'psgix.goog_iap_jwt'}       = $jwt;
+  $self->app->($env)
+}
 
 sub decode_jwt_env {
   (my MY $self, my Env $env) = @_;
