@@ -6,6 +6,8 @@ use MOP4Import::Base::CLI_JSON -as_base
   , [fields =>
      , [cache_file => default => "var/cache/public_key-jwk.json"]
      , [key_url => default => "https://www.gstatic.com/iap/verify/public_key-jwk"]
+     , [want_iss => default => "https://cloud.google.com/iap"],
+     , [want_hd => doc => "expected hosting domain"],
      , qw(
        _iap_public_key
      )
@@ -27,7 +29,10 @@ sub decode_jwt_env {
   (my MY $self, my Env $env) = @_;
   Crypt::JWT::decode_jwt(
     token => $env->{HTTP_X_GOOG_IAP_JWT_ASSERTION},
-    kid_keys => $self->iap_public_key
+    kid_keys => $self->iap_public_key,
+    verify_exp => 1, verify_iat => 1,
+    verify_iss => $self->{want_iss},
+    ($self->{want_hd} ? (verify_hd => $self->{want_hd}) : ()),
   )
 }
 
