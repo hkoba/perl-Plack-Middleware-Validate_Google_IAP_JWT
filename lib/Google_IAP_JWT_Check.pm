@@ -27,13 +27,25 @@ use Crypt::JWT ();
 use MOP4Import::PSGIEnv qw(
   HTTP_X_GOOG_IAP_JWT_ASSERTION
   psgix.goog_iap_jwt
+  psgix.goog_iap_jwt_aud
+  psgix.goog_iap_jwt_email
+  psgix.goog_iap_jwt_sub
 );
+
+use MOP4Import::Types
+  JWT => [[fields => qw(
+    aud email sub
+  )]];
 
 sub call {
   (my MY $self, my Env $env) = @_;
 
-  my $jwt = $self->decode_jwt_env($env);
+  my JWT $jwt = $self->decode_jwt_env($env);
   $env->{'psgix.goog_iap_jwt'}       = $jwt;
+  $env->{'psgix.goog_iap_jwt_aud'}   = $jwt->{aud};
+  $env->{'psgix.goog_iap_jwt_email'} = $jwt->{email};
+  $env->{'psgix.goog_iap_jwt_sub'}   = $jwt->{sub};
+
   $self->app->($env)
 }
 
