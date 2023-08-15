@@ -2,6 +2,9 @@
 package Plack::Middleware::Validate_Google_IAP_JWT;
 use strict;
 use warnings;
+
+our $VERSION = "0.01";
+
 use MOP4Import::Base::CLI_JSON -as_base
   , [fields =>
      , [cache_file => default => "var/cache/public_key-jwk.json"]
@@ -95,3 +98,42 @@ sub fetch_iap_public_key {
 
 MY->run(\@ARGV) unless caller;
 1;
+__END__
+
+=encoding utf-8
+
+=head1 NAME
+
+Plack::Middleware::Validate_Google_IAP_JWT - Validate JWT given from Google IAP
+
+=head1 SYNOPSIS
+
+  use Plack::Builder;
+
+  my $app = sub {
+    my $env = shift;
+    return [200, [], ["Validated email: ", $env->{"psgix.goog_iap_jwt_email"}]]
+  };
+
+  builder {
+    enable "Validate_Google_IAP_JWT", want_hd => "example.com";
+    $app;
+  };
+
+=head1 DESCRIPTION
+
+Plack::Middleware::Validate_Google_IAP_JWT is ...
+
+=head1 LICENSE
+
+Copyright (C) Kobayasi, Hiroaki.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=head1 AUTHOR
+
+Kobayasi, Hiroaki E<lt>buribullet@gmail.comE<gt>
+
+=cut
+
