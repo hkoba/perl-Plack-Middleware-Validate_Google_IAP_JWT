@@ -30,6 +30,7 @@ use MOP4Import::PSGIEnv qw(
   psgix.goog_iap_jwt_aud
   psgix.goog_iap_jwt_email
   psgix.goog_iap_jwt_sub
+  psgix.goog_iap_jwt_account
 );
 
 use MOP4Import::Types
@@ -45,6 +46,10 @@ sub call {
   $env->{'psgix.goog_iap_jwt_aud'}   = $jwt->{aud};
   $env->{'psgix.goog_iap_jwt_email'} = $jwt->{email};
   $env->{'psgix.goog_iap_jwt_sub'}   = $jwt->{sub};
+  if ($self->{want_hd}) {
+    (my $account = $jwt->{email}) =~ s,@\Q$self->{want_hd}\E\z,,;
+    $env->{'psgix.goog_iap_jwt_account'} = $account;
+  }
 
   $self->app->($env)
 }
