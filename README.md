@@ -1,11 +1,21 @@
 
 # NAME
 
-Plack::Middleware::Validate\_Google\_IAP\_JWT - It's new $module
+Plack::Middleware::Validate\_Google\_IAP\_JWT - Validate JWT given from Google IAP
 
 # SYNOPSIS
 
-    use Plack::Middleware::Validate_Google_IAP_JWT;
+    use Plack::Builder;
+
+    my $app = sub {
+      my $env = shift;
+      return [200, [], ["Validated email: ", $env->{"psgix.goog_iap_jwt_email"}]]
+    };
+
+    builder {
+      enable "Validate_Google_IAP_JWT", want_hd => "example.com";
+      $app;
+    };
 
 # DESCRIPTION
 

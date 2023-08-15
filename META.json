@@ -1,5 +1,5 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "Validate JWT given from Google IAP",
    "author" : [
       "Kobayasi, Hiroaki <buribullet@gmail.com>"
    ],
@@ -52,7 +52,16 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "repository" : {
+         "type" : "git",
+         "url" : "git://gitlab-test.ssri.co.jp/devteam/infra/Plack-Middleware-Validate_Google_IAP_JWT.git"
+      }
+   },
    "version" : "0.01",
+   "x_contributors" : [
+      "Kobayasi, Hiroaki <hkoba@ssri.com>"
+   ],
    "x_serialization_backend" : "JSON::PP version 4.16",
    "x_static_install" : 1
 }
