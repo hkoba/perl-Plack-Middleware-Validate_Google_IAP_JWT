@@ -7,7 +7,6 @@ our $VERSION = "0.01";
 
 use MOP4Import::Base::CLI_JSON -as_base
   , [fields =>
-     , [cache_file => default => "var/cache/public_key-jwk.json"]
      , [key_url => default => "https://www.gstatic.com/iap/verify/public_key-jwk"]
      , [want_iss => default => "https://cloud.google.com/iap"],
      , [want_hd => doc => "expected hosting domain"],
@@ -71,18 +70,11 @@ sub decode_jwt_env {
 sub iap_public_key {
   (my MY $self) = @_;
   $self->{_iap_public_key} //= do {
-    if (-e $self->{cache_file}) {
-      $self->cli_read_file($self->{cache_file});
-    } else {
-      my ($ok, $err) = $self->fetch_iap_public_key;
-      unless (-e (my $dir = dirname($self->{cache_file}))) {
-        mkdir $dir or die "Can't mkdir $dir: $!";
-      }
-      open my $fh, '>', $self->{cache_file}
-        or Carp::croak "Can't write to $self->{cache_file}: $!";
-      print $fh $self->cli_encode_json($ok);
-      $ok;
+    my ($ok, $err) = $self->fetch_iap_public_key;
+    if ($err) {
+      Carp::croak "Can't fetch iap public_key: $err";
     }
+    $ok;
   };
 }
 
