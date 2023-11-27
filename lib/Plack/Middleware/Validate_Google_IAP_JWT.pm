@@ -10,6 +10,7 @@ use MOP4Import::Base::CLI_JSON -as_base
      , [key_url => default => "https://www.gstatic.com/iap/verify/public_key-jwk"]
      , [want_iss => default => "https://cloud.google.com/iap"],
      , [want_hd => doc => "expected hosting domain"],
+     , [guest_subpath => doc => "Allow guest access(skip JWT check) for this subpath"]
      , qw(
        app
        _iap_public_key
@@ -72,6 +73,12 @@ use MOP4Import::Types
 
 sub call {
   (my MY $self, my Env $env) = @_;
+
+  if ($self->{guest_subpath}
+      and substr($env->{PATH_INFO}, 0, length($self->{guest_subpath}))
+      eq $self->{guest_subpath}) {
+    return $self->app->($env);
+  }
 
   my JWT $jwt = $self->decode_jwt_env($env);
   $env->{'psgix.goog_iap_jwt'}       = $jwt;
