@@ -80,6 +80,10 @@ sub call {
     return $self->app->($env);
   }
 
+  unless ($env->{HTTP_X_GOOG_IAP_JWT_ASSERTION}) {
+    return [403, [], ["Forbidden (no JWT assertion)\n"]];
+  }
+
   my JWT $jwt = $self->decode_jwt_env($env);
   $env->{'psgix.goog_iap_jwt'}       = $jwt;
   $env->{'psgix.goog_iap_jwt_aud'}   = $jwt->{aud};
