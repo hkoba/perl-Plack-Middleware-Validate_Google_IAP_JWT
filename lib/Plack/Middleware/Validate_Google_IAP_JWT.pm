@@ -7,13 +7,14 @@ our $VERSION = "0.01";
 
 use MOP4Import::Base::CLI_JSON -as_base
   , [fields =>
-     , [cache_file => default => "var/cache/public_key-jwk.json"]
      , [key_url => default => "https://www.gstatic.com/iap/verify/public_key-jwk"]
      , [want_iss => default => "https://cloud.google.com/iap"],
      , [want_hd => doc => "expected hosting domain"],
+     , [guest_subpath => doc => "Allow guest access(skip JWT check) for this subpath"]
      , qw(
        app
        _iap_public_key
+       _expires_at
      )
    ]
   ;
@@ -21,6 +22,7 @@ use MOP4Import::Base::CLI_JSON -as_base
 use parent qw(Plack::Middleware);
 
 use File::Basename;
+use Time::Piece;
 
 use URI;
 use HTTP::Tiny;
@@ -39,10 +41,48 @@ use MOP4Import::PSGIEnv qw(
 use MOP4Import::Types
   JWT => [[fields => qw(
     aud email sub
-  )]];
+  )]],
+  Response => [[fields => qw(
+    success
+    url
+    status
+    reason
+    content
+    headers
+    protocol
+    redirects
+  )]],
+  ResHeaders => [[fields => qw(
+      accept-ranges
+      cache-control
+      content-length
+      content-security-policy
+      content-type
+      cross-origin-opener-policy
+      cross-origin-resource-policy
+      date
+      expires
+      last-modified
+      report-to
+      server
+      vary
+      x-content-type-options
+      x-xss-protection
+  )]]
+  ;
 
 sub call {
   (my MY $self, my Env $env) = @_;
+
+  if ($self->{guest_subpath}
+      and substr($env->{PATH_INFO}, 0, length($self->{guest_subpath}))
+      eq $self->{guest_subpath}) {
+    return $self->app->($env);
+  }
+
+  unless ($env->{HTTP_X_GOOG_IAP_JWT_ASSERTION}) {
+    return [403, [], ["Forbidden (no JWT assertion)\n"]];
+  }
 
   my JWT $jwt = $self->decode_jwt_env($env);
   $env->{'psgix.goog_iap_jwt'}       = $jwt;
@@ -70,30 +110,45 @@ sub decode_jwt_env {
 
 sub iap_public_key {
   (my MY $self) = @_;
-  $self->{_iap_public_key} //= do {
-    if (-e $self->{cache_file}) {
-      $self->cli_read_file($self->{cache_file});
-    } else {
-      my ($ok, $err) = $self->fetch_iap_public_key;
-      unless (-e (my $dir = dirname($self->{cache_file}))) {
-        mkdir $dir or die "Can't mkdir $dir: $!";
-      }
-      open my $fh, '>', $self->{cache_file}
-        or Carp::croak "Can't write to $self->{cache_file}: $!";
-      print $fh $self->cli_encode_json($ok);
-      $ok;
-    }
-  };
+  if ($self->{_iap_public_key} and (time + 10) < $self->{_expires_at}) {
+    return $self->{_iap_public_key}
+  }
+  my ($ok, $err) = $self->fetch_iap_public_key_with_expires;
+  if ($err) {
+    Carp::croak "Can't fetch iap public_key: $err";
+  }
+
+  ($self->{_iap_public_key}, $self->{_expires_at}) = @$ok;
+
+  return $self->{_iap_public_key};
 }
 
 sub fetch_iap_public_key {
   (my MY $self) = @_;
-  my $response = HTTP::Tiny->new->request(GET => $self->{key_url});
+  my ($ok, $err) = $self->fetch_iap_public_key_with_expires;
+  if ($err) {
+    return (undef, $err)
+  } else {
+    $ok->[0]
+  }
+}
+
+sub fetch_iap_public_key_with_expires {
+  (my MY $self) = @_;
+  my Response $response = HTTP::Tiny->new->request(GET => $self->{key_url});
   if ($response->{success}) {
-    $self->cli_decode_json($response->{content})
+    my $jwt = $self->cli_decode_json($response->{content});
+    my ResHeaders $headers = $response->{headers};
+    my $expires = $headers->{expires} ? $self->parse_http_date($headers->{expires}) : undef;
+    [$jwt, $expires];
   } else {
     (undef, $response->{reason})
   }
+}
+
+sub parse_http_date {
+  (my MY $self, my $date) = @_;
+  Time::Piece->strptime($date, "%a, %d %b %Y %H:%M:%S %Z")->epoch
 }
 
 MY->run(\@ARGV) unless caller;
