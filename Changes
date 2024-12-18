@@ -2,6 +2,10 @@ Revision history for Perl extension Plack-Middleware-Validate_Google_IAP_JWT
 
 {{$NEXT}}
 
+0.03 2024-12-18T08:12:58Z
+
+    - Allow psgi tuple as the psgi app for debugging aid. See <https://hkoba.hatenablog.com/entry/perl-adventcal2024-1220>.
+
 0.02 2024-12-18T05:31:10Z
 
     - original version
