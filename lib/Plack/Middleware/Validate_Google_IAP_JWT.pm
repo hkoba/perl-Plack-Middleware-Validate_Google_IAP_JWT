@@ -75,8 +75,9 @@ sub call {
   (my MY $self, my Env $env) = @_;
 
   my $app = $self->app;
-  # Allow non-ref fake app
-  if (ref $app ne 'CODE') {
+
+  # Allow fake app
+  if (ref $app eq 'ARRAY') {
     my $value = $app;
     $app = sub {
       return $value;
