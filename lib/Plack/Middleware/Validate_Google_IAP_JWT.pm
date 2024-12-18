@@ -3,7 +3,7 @@ package Plack::Middleware::Validate_Google_IAP_JWT;
 use strict;
 use warnings;
 
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 use MOP4Import::Base::CLI_JSON -as_base
   , [fields =>
