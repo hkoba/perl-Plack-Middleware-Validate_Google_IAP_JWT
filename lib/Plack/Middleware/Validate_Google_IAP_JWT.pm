@@ -74,10 +74,19 @@ use MOP4Import::Types
 sub call {
   (my MY $self, my Env $env) = @_;
 
+  my $app = $self->app;
+  # Allow non-ref fake app
+  if (ref $app ne 'CODE') {
+    my $value = $app;
+    $app = sub {
+      return $value;
+    };
+  }
+
   if ($self->{guest_subpath}
       and substr($env->{PATH_INFO}, 0, length($self->{guest_subpath}))
       eq $self->{guest_subpath}) {
-    return $self->app->($env);
+    return $app->($env);
   }
 
   unless ($env->{HTTP_X_GOOG_IAP_JWT_ASSERTION}) {
@@ -99,7 +108,7 @@ sub call {
     $env->{'psgix.goog_iap_jwt_account'} = $account;
   }
 
-  $self->app->($env)
+  $app->($env)
 }
 
 sub decode_jwt_env_or_error {
