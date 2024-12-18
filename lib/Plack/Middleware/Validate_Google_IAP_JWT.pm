@@ -84,7 +84,18 @@ sub call {
     return [403, [], ["Forbidden (no JWT assertion)\n"]];
   }
 
-  my JWT $jwt = $self->decode_jwt_env($env);
+  my JWT $jwt = do {
+    local $@;
+    my $res = eval {$self->decode_jwt_env($env)};
+    if ($@) {
+      if ($@ =~ /^(JWT: \S+ claim check failed.*?) at/) {
+        return [403, [], [$1]];
+      } else {
+        return [400, [], [$@]];
+      }
+    }
+    $res;
+  };
   $env->{'psgix.goog_iap_jwt'}       = $jwt;
   $env->{'psgix.goog_iap_jwt_aud'}   = $jwt->{aud};
   $env->{'psgix.goog_iap_jwt_email'} = $jwt->{email};

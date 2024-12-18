@@ -9,5 +9,5 @@ requires 'Crypt::JWT' => '0.035';
 
 on 'test' => sub {
     requires 'Test::More', '0.98';
+    requires 'Plack::Test';
 };
-

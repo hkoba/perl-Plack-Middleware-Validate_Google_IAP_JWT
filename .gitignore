@@ -29,3 +29,4 @@ cover_db/
 MYMETA.*
 
 /Plack-Middleware-Validate_Google_IAP_JWT-*
+t/sample.jwt
