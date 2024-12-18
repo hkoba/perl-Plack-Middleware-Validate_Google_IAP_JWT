@@ -84,18 +84,12 @@ sub call {
     return [403, [], ["Forbidden (no JWT assertion)\n"]];
   }
 
-  my JWT $jwt = do {
-    local $@;
-    my $res = eval {$self->decode_jwt_env($env)};
-    if ($@) {
-      if ($@ =~ /^(JWT: \S+ claim check failed.*?) at/) {
-        return [403, [], [$1]];
-      } else {
-        return [400, [], [$@]];
-      }
-    }
-    $res;
-  };
+  (my JWT $jwt, my $err) = $self->decode_jwt_env_or_error($env);
+  if ($err) {
+    my ($code, $diag) = $self->parse_jwt_error($err);
+    return [$code, [], [$diag]];
+  }
+
   $env->{'psgix.goog_iap_jwt'}       = $jwt;
   $env->{'psgix.goog_iap_jwt_aud'}   = $jwt->{aud};
   $env->{'psgix.goog_iap_jwt_email'} = $jwt->{email};
@@ -108,6 +102,17 @@ sub call {
   $self->app->($env)
 }
 
+sub decode_jwt_env_or_error {
+  (my MY $self, my Env $env) = @_;
+  local $@;
+  my $res = eval {$self->decode_jwt_env($env)};
+  if ($@) {
+    (undef, $@)
+  } else {
+    $res;
+  }
+}
+
 sub decode_jwt_env {
   (my MY $self, my Env $env) = @_;
   Crypt::JWT::decode_jwt(
@@ -117,6 +122,15 @@ sub decode_jwt_env {
     verify_iss => $self->{want_iss},
     ($self->{want_hd} ? (verify_hd => $self->{want_hd}) : ()),
   )
+}
+
+sub parse_jwt_error {
+  (my MY $self, my $errmsg) = @_;
+  if ($errmsg =~ /^(JWT: \S+ claim check failed.*?) at/) {
+    (403, $1);
+  } else {
+    (400, $errmsg);
+  }
 }
 
 sub iap_public_key {
