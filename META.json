@@ -1,10 +1,10 @@
 {
-   "abstract" : "Validate JWT given from Google IAP",
+   "abstract" : "Validate JWT from Google IAP",
    "author" : [
       "Kobayasi, Hiroaki <buribullet@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.1.21, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Minilla/v3.1.23, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -42,11 +42,17 @@
       },
       "runtime" : {
          "requires" : {
+            "Crypt::JWT" : "0.035",
+            "HTTP::Tiny" : "0",
+            "MOP4Import::Declare" : "0.060",
+            "Plack::Middleware" : "0",
+            "URI" : "0",
             "perl" : "5.008001"
          }
       },
       "test" : {
          "requires" : {
+            "Plack::Test" : "0",
             "Test::More" : "0.98"
          }
       }
