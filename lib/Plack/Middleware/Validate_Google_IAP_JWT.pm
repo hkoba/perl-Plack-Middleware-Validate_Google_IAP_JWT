@@ -9,7 +9,7 @@ use MOP4Import::Base::CLI_JSON -as_base
   , [fields =>
      , [key_url => default => "https://www.gstatic.com/iap/verify/public_key-jwk"]
      , [want_iss => default => "https://cloud.google.com/iap"],
-     , [want_hd => doc => "expected hosting domain"],
+     , [want_hd => doc => "expected hosted domain"],
      , [guest_subpath => doc => "Allow guest access(skip JWT check) for this subpath"]
      , qw(
        app
@@ -171,7 +171,8 @@ Plack::Middleware::Validate_Google_IAP_JWT - Validate JWT from Google IAP
   };
 
   builder {
-    enable "Validate_Google_IAP_JWT", want_hd => "example.com";
+    enable "Validate_Google_IAP_JWT", want_hd => "example.com"
+      , guest_subpath => "/guest/";
     $app;
   };
 
@@ -191,9 +192,15 @@ which carries JWT containing the email address of the authenticated end user.
 
 Expected hosted domain. See L<https://cloud.google.com/iap/docs/signed-headers-howto#verifying_the_jwt_payload>.
 
+=head2 guest_subpath
+
+If set, allows guest access for this subpath.
+
 =head1 METHODS
 
 =head2 fetch_iap_public_key
+
+Fetch L<https://www.gstatic.com/iap/verify/public_key-jwk> and returns decoded json.
 
 =head1 LICENSE
 
