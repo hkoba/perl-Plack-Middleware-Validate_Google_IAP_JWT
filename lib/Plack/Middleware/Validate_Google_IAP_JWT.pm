@@ -104,7 +104,7 @@ __END__
 
 =head1 NAME
 
-Plack::Middleware::Validate_Google_IAP_JWT - Validate JWT given from Google IAP
+Plack::Middleware::Validate_Google_IAP_JWT - Validate JWT from Google IAP
 
 =head1 SYNOPSIS
 
@@ -122,7 +122,23 @@ Plack::Middleware::Validate_Google_IAP_JWT - Validate JWT given from Google IAP
 
 =head1 DESCRIPTION
 
-Plack::Middleware::Validate_Google_IAP_JWT is ...
+Plack::Middleware::Validate_Google_IAP_JWT is a Plack middleware that validates JWT from
+L<Google Cloud Identity-Aware Proxy(IAP)|https://cloud.google.com/security/products/iap>. 
+Although Cloud IAP rejects unauthorized access from public networks, 
+internal processes on the same network can still spoof the identity.
+To protect against such security risks, Cloud IAP provides a special HTTP header, L<'x-goog-iap-jwt-assertion'|https://cloud.google.com/iap/docs/signed-headers-howto>,
+which carries JWT containing the email address of the authenticated end user.
+ This middleware protects Plack apps by validating the JWT.
+
+=head1 CONFIGURATION
+
+=head2 want_hd
+
+Expected hosted domain. See L<https://cloud.google.com/iap/docs/signed-headers-howto#verifying_the_jwt_payload>.
+
+=head1 METHODS
+
+=head2 fetch_iap_public_key
 
 =head1 LICENSE
 
@@ -136,4 +152,3 @@ it under the same terms as Perl itself.
 Kobayasi, Hiroaki E<lt>buribullet@gmail.comE<gt>
 
 =cut
-
