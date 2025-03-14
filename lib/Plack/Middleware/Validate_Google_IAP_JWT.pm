@@ -71,6 +71,19 @@ use MOP4Import::Types
   )]]
   ;
 
+sub allow_access_without_auth {
+  (my MY $self, my Env $env) = @_;
+  if ($self->{guest_subpath}
+      and substr($env->{PATH_INFO}, 0, length($self->{guest_subpath}))
+      eq $self->{guest_subpath}) {
+    return 1;
+  }
+  elsif ($env->{REQUEST_METHOD} eq 'OPTIONS') {
+    # オプションが指定されたときだけにしたほうが良さそう
+    return 1;
+  }
+}
+
 sub call {
   (my MY $self, my Env $env) = @_;
 
@@ -84,9 +97,7 @@ sub call {
     };
   }
 
-  if ($self->{guest_subpath}
-      and substr($env->{PATH_INFO}, 0, length($self->{guest_subpath}))
-      eq $self->{guest_subpath}) {
+  if ($self->allow_access_without_auth($env)) {
     return $app->($env);
   }
 
